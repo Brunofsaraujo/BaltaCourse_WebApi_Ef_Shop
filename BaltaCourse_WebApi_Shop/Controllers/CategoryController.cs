@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using BaltaCourse_WebApi_Shop.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,34 +13,47 @@ namespace BaltaCourse_WebApi_Shop.Controllers
     {
         // https://localhost:5001/categories
         [HttpGet]
-        [Route("{id:int}")]
-        public string GetById(int id)
+        [Route("")]
+        public async Task<ActionResult<List<Category>>> Get()
         {
-            return "Olá mundo Get!";
+            return new List<Category>();
+        }
+
+        [HttpGet]
+        [Route("{id:int}")]
+        public async Task<ActionResult<Category>> GetById(int id)
+        {
+            return new Category();
         }
 
         [HttpPost]
         [Route("")]
-        public Category Post([FromBody] Category model)
+        public async Task<ActionResult<List<Category>>> Post([FromBody] Category model)
         {
-            return model;
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(model);
         }
 
         [HttpPut]
         [Route("{id:int}")]
-        public Category Put(int id, [FromBody] Category model)
+        public async Task<ActionResult<List<Category>>> Put(int id, [FromBody] Category model)
         {
-            if (model.Id == id)
-                return model;
+            if (model.Id != id)
+                return NotFound(new { message = "Categoria não encontrada" });
 
-            return null;
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return NotFound();
         }
 
         [HttpDelete]
         [Route("{id:int}")]
-        public string Delete()
+        public async Task<ActionResult<List<Category>>> Delete()
         {
-            return "Olá mundo Delete!";
+            return Ok();
         }
     }
 }
