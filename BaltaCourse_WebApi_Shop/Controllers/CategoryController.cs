@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BaltaCourse_WebApi_Shop.Data;
 using BaltaCourse_WebApi_Shop.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,12 +29,23 @@ namespace BaltaCourse_WebApi_Shop.Controllers
 
         [HttpPost]
         [Route("")]
-        public async Task<ActionResult<List<Category>>> Post([FromBody] Category model)
+        public async Task<ActionResult<List<Category>>> Post(
+            [FromBody] Category model,
+            [FromServices] DataContext context)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            return Ok(model);
+            try
+            {
+                context.Categories.Add(model);
+                await context.SaveChangesAsync();
+                return Ok(model);
+            }
+            catch
+            {
+                return BadRequest(new { message = "Não foi possível criar a categoria" });
+            }
         }
 
         [HttpPut]
