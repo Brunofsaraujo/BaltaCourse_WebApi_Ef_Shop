@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BaltaCourse_WebApi_Shop.Data;
 using BaltaCourse_WebApi_Shop.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaltaCourse_WebApi_Shop.Controllers
 {
@@ -15,16 +17,22 @@ namespace BaltaCourse_WebApi_Shop.Controllers
         // https://localhost:5001/categories
         [HttpGet]
         [Route("")]
-        public async Task<ActionResult<List<Category>>> Get()
+        public async Task<ActionResult<List<Category>>> Get(
+            [FromServices] DataContext context
+        )
         {
-            return new List<Category>();
+            var categories = await context.Categories.AsNoTracking().ToListAsync();
+            return Ok(categories);
         }
 
         [HttpGet]
         [Route("{id:int}")]
-        public async Task<ActionResult<Category>> GetById(int id)
+        public async Task<ActionResult<Category>> GetById(
+            int id,
+            [FromServices] DataContext context)
         {
-            return new Category();
+            var category = await context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            return Ok(category);
         }
 
         [HttpPost]
@@ -50,7 +58,10 @@ namespace BaltaCourse_WebApi_Shop.Controllers
 
         [HttpPut]
         [Route("{id:int}")]
-        public async Task<ActionResult<List<Category>>> Put(int id, [FromBody] Category model)
+        public async Task<ActionResult<List<Category>>> Put(
+            int id,
+            [FromBody] Category model,
+            [FromServices] DataContext context)
         {
             if (model.Id != id)
                 return NotFound(new { message = "Categoria não encontrada" });
@@ -58,14 +69,43 @@ namespace BaltaCourse_WebApi_Shop.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            return NotFound();
+            try
+            {
+                context.Entry<Category>(model).State = EntityState.Modified;
+                await context.SaveChangesAsync();
+                return Ok(model);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return BadRequest(new { message = "Este registro já foi atualizado." });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { message = "Não foi possível atualizar a categoria." });
+            }
         }
 
         [HttpDelete]
         [Route("{id:int}")]
-        public async Task<ActionResult<List<Category>>> Delete()
+        public async Task<ActionResult<List<Category>>> Delete(
+            int id,
+            [FromServices] DataContext context
+        )
         {
-            return Ok();
+            var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
+            if (category == null)
+                return NotFound(new { message = "Categoria não encontrada" });
+
+            try
+            {
+                context.Categories.Remove(category);
+                await context.SaveChangesAsync();
+                return Ok(new { message = "Categoria removida com sucesso" });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { message = "Não foi possível remover a categoria" });
+            }
         }
     }
 }
