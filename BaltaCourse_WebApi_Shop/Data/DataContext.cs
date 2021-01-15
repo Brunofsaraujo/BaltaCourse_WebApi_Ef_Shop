@@ -13,6 +13,6 @@ namespace BaltaCourse_WebApi_Shop.Data
 
         public DbSet<Category> Categories { get; set; }
 
-        public DbSet<User> User { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }
